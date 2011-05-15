@@ -1,6 +1,3 @@
-// xattrlib.cpp: определяет экспортированные функции для приложения DLL.
-//
-
 #include "stdafx.h"
 #include "xattrlib.h"
 
@@ -24,21 +21,22 @@ static HANDLE OpenFileForRead(IN LPCWSTR sFileName, IN BOOL bBackup)
 
 XATTRLIB_API BOOL ReadEA(
   IN LPCWSTR sFileName,
-  IN LPCSTR  sEaName,  // ASCII, не UNICODE!
-  OUT PVOID  pBuf,      // Буфер необходимо выделить перед вызовом функции!
-  OUT PUINT  puBufLen
-)  // Сюда пишется длина записанных в буфер данных.
+  IN LPCSTR  sEaName,  // ASCII, not UNICODE!
+  OUT PVOID  pBuf,
+  OUT PUINT  puBufLen,
+  OUT PBYTE  cFlags
+)
 {
   IO_STATUS_BLOCK iosb;
   NTSTATUS ntst;
   
-  // Проверка буферов
-  if (NULL == pBuf || NULL == puBufLen)
+  // Buffer check
+  if (NULL == pBuf || NULL == puBufLen || NULL == cFlags)
   {
     return FALSE;
   }
 
-  // Открывается файл на чтение
+  // Open for read. 'Backup' mode if opening a directory
   HANDLE hFile = OpenFileForRead(sFileName,
     (GetFileAttributes(sFileName) & FILE_ATTRIBUTE_DIRECTORY));
 
@@ -47,13 +45,13 @@ XATTRLIB_API BOOL ReadEA(
     return FALSE;
   }
 
-  // Выделяется память под все EA
+  // Mem alloc for EA
   PFILE_FULL_EA_INFORMATION ffei
     = (PFILE_FULL_EA_INFORMATION) GlobalAlloc(GPTR, MAX_EA_LENGTH);
 
   while (TRUE)
   {
-    // Функция вызывается в режиме 1 вызов - 1 атрибут
+    // Return single entry mode
     ntst =  NtQueryEaFile(hFile, &iosb, ffei,
                       MAX_EA_LENGTH, TRUE, NULL, NULL, NULL, FALSE);
     if (!NT_SUCCESS(ntst))
@@ -62,11 +60,12 @@ XATTRLIB_API BOOL ReadEA(
     }
     if (0 == _strnicmp(ffei->EaName, sEaName, MAX_EA_NAME))
     {
-      // Копируются данные атрибута во внешний буфер
+      // Copy attribute value
       memcpy(pBuf, ffei->EaName + ffei->EaNameLength + 1, ffei->EaValueLength);
 
-      // Во внешнюю переменную отправляется длина скопированных данных
+      // Return a value length
       *puBufLen = ffei->EaValueLength;
+      *cFlags = ffei->Flags;
 
       GlobalFree(ffei);
       CloseHandle(hFile);
@@ -86,7 +85,7 @@ XATTRLIB_API BOOL DeleteEA(IN LPCWSTR sFileName, IN LPCSTR sAttrName)
 
 XATTRLIB_API BOOL WriteEA(
   IN LPCWSTR sFileName,
-  IN LPCSTR  sAttrName, // ASCII, не UNICODE!
+  IN LPCSTR  sAttrName, // ASCII, not UNICODE!
   IN PVOID   pBuf,
   IN UINT    puBufLen,
   IN BYTE    cFlags
@@ -95,13 +94,13 @@ XATTRLIB_API BOOL WriteEA(
   IO_STATUS_BLOCK iosb;
   NTSTATUS ntst;
 
-  // Проверка длины имени атрибута
+  // Attribute name length check
   if (strlen(sAttrName) > MAX_EA_NAME)
   {
     return FALSE;
   }
 
-  // TODO: проверить на максимальную длину как следует
+  // TODO: make a proper length check
   if (puBufLen > MAX_EA_LENGTH)
   {
     return FALSE;
@@ -115,7 +114,7 @@ XATTRLIB_API BOOL WriteEA(
     return FALSE;
   }
 
-  // Выделяется память под все EA
+  // Mem alloc for EA
   PFILE_FULL_EA_INFORMATION ffei
     = (PFILE_FULL_EA_INFORMATION) GlobalAlloc(GPTR, MAX_EA_LENGTH);
 
@@ -123,9 +122,13 @@ XATTRLIB_API BOOL WriteEA(
   ffei->EaValueLength = puBufLen;
   ffei->Flags = cFlags;
 
+  // Copy attribute name
   memcpy(ffei->EaName, sAttrName, ffei->EaNameLength);
+
+  // Copy attribute value
   memcpy(ffei->EaName + ffei->EaNameLength + 1, pBuf, ffei->EaValueLength);
 
+  // Set an EA to the file
   ntst = NtSetEaFile(hFile, &iosb, ffei, MAX_EA_LENGTH);
 
   CloseHandle(hFile);

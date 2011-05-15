@@ -7,16 +7,19 @@
 #define MAX_EA_LENGTH 64*1024
 #define MAX_EA_NAME 255
 
-XATTRLIB_API BOOL ReadEA(
+XATTRLIB_API BOOL ReadEA
+(
   IN LPCWSTR sFileName,
-  IN LPCSTR  sEaName,  // ASCII, не UNICODE!
-  OUT PVOID  pBuf,      // Буфер необходимо выделить перед вызовом функции!
-  OUT PUINT  puBufLen
+  IN LPCSTR  sEaName,  // ASCII, not UNICODE!
+  OUT PVOID  pBuf,
+  OUT PUINT  puBufLen,
+  OUT PBYTE cFlags
 );
 
-XATTRLIB_API BOOL WriteEA(
+XATTRLIB_API BOOL WriteEA
+(
   IN LPCWSTR sFileName,
-  IN LPCSTR  sAttrName, // ASCII, не UNICODE!
+  IN LPCSTR  sAttrName, // ASCII, not UNICODE!
   IN PVOID   pBuf,
   IN UINT    puBufLen,
   IN BYTE    cFlags
