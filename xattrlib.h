@@ -9,11 +9,11 @@
 
 XATTRLIB_API BOOL ReadExtendedAttribute
 (
-  IN LPCWSTR sFileName,
-  IN LPCSTR  sEaName,  // ASCII, not UNICODE!
-  OUT PVOID  pBuf,
-  OUT PUINT  puBufLen,
-  OUT PBYTE cFlags
+  IN  LPCWSTR sFileName,
+  IN  LPCSTR  sEaName,  // ASCII, not UNICODE!
+  OUT PVOID   pBuf,
+  OUT PUINT   puBufLen,
+  OUT PBYTE   cFlags
 );
 
 XATTRLIB_API BOOL WriteExtendedAttribute
@@ -27,4 +27,8 @@ XATTRLIB_API BOOL WriteExtendedAttribute
 
 XATTRLIB_API BOOL DeleteExtendedAttribute(IN LPCWSTR sFileName, IN LPCSTR sAttrName);
 
-XATTRLIB_API BOOL ExtendedAttributeExists(IN LPCWSTR sFileName, IN LPCSTR sAttrName);
+XATTRLIB_API BOOL GetExtendedAttributesList(
+  IN  LPCWSTR sFileName,
+  OUT PFILE_FULL_EA_INFORMATION pAttributeList,
+  IN  ULONG puAttributeListLength
+);

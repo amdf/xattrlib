@@ -19,6 +19,38 @@ static HANDLE OpenFileForRead(IN LPCWSTR sFileName, IN BOOL bBackup)
     : FILE_FLAG_OPEN_REPARSE_POINT, 0);
 }
 
+XATTRLIB_API BOOL GetExtendedAttributesList(
+  IN  LPCWSTR sFileName,
+  OUT PFILE_FULL_EA_INFORMATION pAttributeList,
+  IN  ULONG puAttributeListLength
+)
+{
+  IO_STATUS_BLOCK iosb;
+  NTSTATUS ntst;
+
+  // Buffer check
+  if (NULL == pAttributeList || 0 == puAttributeListLength)
+  {
+    return FALSE;
+  }
+
+  // Open for read. 'Backup' mode if opening a directory
+  HANDLE hFile = OpenFileForRead(sFileName,
+    (GetFileAttributes(sFileName) & FILE_ATTRIBUTE_DIRECTORY));
+  
+  if (INVALID_HANDLE_VALUE == hFile)
+  {
+    return FALSE;
+  }
+
+  // Return multiple entries
+  ntst =  NtQueryEaFile(hFile, &iosb, pAttributeList,
+                    puAttributeListLength, FALSE, NULL, NULL, NULL, FALSE);
+
+  CloseHandle(hFile);
+  return NT_SUCCESS(ntst);
+}
+
 XATTRLIB_API BOOL ReadExtendedAttribute(
   IN LPCWSTR sFileName,
   IN LPCSTR  sEaName,  // ASCII, not UNICODE!
@@ -62,7 +94,7 @@ XATTRLIB_API BOOL ReadExtendedAttribute(
     {
       // Copy attribute value
       memcpy(pBuf, ffei->EaName + ffei->EaNameLength + 1, ffei->EaValueLength);
-
+      
       // Return a value length
       *puBufLen = ffei->EaValueLength;
       *cFlags = ffei->Flags;
