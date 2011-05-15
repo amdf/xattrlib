@@ -7,7 +7,7 @@
 #define MAX_EA_LENGTH 64*1024
 #define MAX_EA_NAME 255
 
-XATTRLIB_API BOOL ReadEA
+XATTRLIB_API BOOL ReadExtendedAttribute
 (
   IN LPCWSTR sFileName,
   IN LPCSTR  sEaName,  // ASCII, not UNICODE!
@@ -16,7 +16,7 @@ XATTRLIB_API BOOL ReadEA
   OUT PBYTE cFlags
 );
 
-XATTRLIB_API BOOL WriteEA
+XATTRLIB_API BOOL WriteExtendedAttribute
 (
   IN LPCWSTR sFileName,
   IN LPCSTR  sAttrName, // ASCII, not UNICODE!
@@ -25,4 +25,6 @@ XATTRLIB_API BOOL WriteEA
   IN BYTE    cFlags
 );
 
-XATTRLIB_API BOOL DeleteEA(IN LPCWSTR sFileName, IN LPCSTR sAttrName);
+XATTRLIB_API BOOL DeleteExtendedAttribute(IN LPCWSTR sFileName, IN LPCSTR sAttrName);
+
+XATTRLIB_API BOOL ExtendedAttributeExists(IN LPCWSTR sFileName, IN LPCSTR sAttrName);

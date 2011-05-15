@@ -19,7 +19,7 @@ static HANDLE OpenFileForRead(IN LPCWSTR sFileName, IN BOOL bBackup)
     : FILE_FLAG_OPEN_REPARSE_POINT, 0);
 }
 
-XATTRLIB_API BOOL ReadEA(
+XATTRLIB_API BOOL ReadExtendedAttribute(
   IN LPCWSTR sFileName,
   IN LPCSTR  sEaName,  // ASCII, not UNICODE!
   OUT PVOID  pBuf,
@@ -78,12 +78,12 @@ XATTRLIB_API BOOL ReadEA(
   return FALSE;
 }
 
-XATTRLIB_API BOOL DeleteEA(IN LPCWSTR sFileName, IN LPCSTR sAttrName)
+XATTRLIB_API BOOL DeleteExtendedAttribute(IN LPCWSTR sFileName, IN LPCSTR sAttrName)
 {
-  return WriteEA(sFileName, sAttrName, NULL, 0, 0);
+  return WriteExtendedAttribute(sFileName, sAttrName, NULL, 0, 0);
 }
 
-XATTRLIB_API BOOL WriteEA(
+XATTRLIB_API BOOL WriteExtendedAttribute(
   IN LPCWSTR sFileName,
   IN LPCSTR  sAttrName, // ASCII, not UNICODE!
   IN PVOID   pBuf,
