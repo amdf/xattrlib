@@ -19,6 +19,14 @@ static HANDLE OpenFileForRead(IN LPCWSTR sFileName, IN BOOL bBackup)
     : FILE_FLAG_OPEN_REPARSE_POINT, 0);
 }
 
+static BOOL WriteExtendedAttributeInternal(
+  IN LPCWSTR sFileName,
+  IN LPCSTR  sAttrName, // ASCII, not UNICODE!
+  IN PVOID   pBuf,
+  IN UINT    puBufLen,
+  IN BYTE    cFlags
+);
+
 XATTRLIB_API BOOL GetExtendedAttributesList(
   IN  LPCWSTR sFileName,
   OUT PFILE_FULL_EA_INFORMATION pAttributeList,
@@ -112,10 +120,27 @@ XATTRLIB_API BOOL ReadExtendedAttribute(
 
 XATTRLIB_API BOOL DeleteExtendedAttribute(IN LPCWSTR sFileName, IN LPCSTR sAttrName)
 {
-  return WriteExtendedAttribute(sFileName, sAttrName, NULL, 0, 0);
+  return WriteExtendedAttributeInternal(sFileName, sAttrName, NULL, 0, 0);
 }
 
 XATTRLIB_API BOOL WriteExtendedAttribute(
+  IN LPCWSTR sFileName,
+  IN LPCSTR  sAttrName, // ASCII, not UNICODE!
+  IN PVOID   pBuf,
+  IN UINT    puBufLen,
+  IN BYTE    cFlags
+)
+{
+  return (NULL == pBuf) ? FALSE : WriteExtendedAttributeInternal(
+    sFileName,
+    sAttrName,
+    pBuf,
+    puBufLen,
+    cFlags
+  );
+}
+
+static BOOL WriteExtendedAttributeInternal(
   IN LPCWSTR sFileName,
   IN LPCSTR  sAttrName, // ASCII, not UNICODE!
   IN PVOID   pBuf,
